@@ -4,3 +4,13 @@ dist/
 *.local
 .env.local
 .env
+
+# Documentación y archivos de texto (auditoría y guides)
+*.md
+*.txt
+
+# Otros archivos no necesarios
+.vscode/
+.idea/
+*.log
+*.lock
