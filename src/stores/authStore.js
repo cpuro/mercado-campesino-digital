@@ -1,34 +1,8 @@
 import { create } from 'zustand'
-import { supabase } from '@/lib/supabase'
+import { authClient } from '@/lib/supabase'
+import { useProfileStore } from '@/stores/useProfileStore'
 
-const resolveUserRole = async (user) => {
-  const metadataRole = user?.user_metadata?.role || 'consumer'
-
-  if (metadataRole === 'admin') {
-    return 'admin'
-  }
-
-  if (!user?.id) {
-    return metadataRole
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (error) {
-      throw error
-    }
-
-    return data?.role || metadataRole
-  } catch {
-    return metadataRole
-  }
-}
-
+// ✅ Usa API Gateway (seguro - sin credenciales de BD)
 export const useAuthStore = create((set) => ({
   user: null,
   role: null,
@@ -39,18 +13,11 @@ export const useAuthStore = create((set) => ({
   setRole: (role) => set({ role }),
   setError: (error) => set({ error }),
 
-  signUp: async (email, password, role) => {
+  signUp: async (email, password, role, firstName, lastName, phone) => {
     try {
       set({ loading: true, error: null })
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { role }
-        }
-      })
-      if (error) throw error
-      set({ user: data.user, role })
+      const data = await authClient.signUp(email, password, role, firstName, lastName, phone)
+      set({ user: data.user, role: data.role })
       return { success: true }
     } catch (error) {
       set({ error: error.message })
@@ -63,14 +30,9 @@ export const useAuthStore = create((set) => ({
   signIn: async (email, password) => {
     try {
       set({ loading: true, error: null })
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) throw error
-      const userRole = await resolveUserRole(data.user)
-      set({ user: data.user, role: userRole })
-      return { success: true, role: userRole }
+      const data = await authClient.signIn(email, password)
+      set({ user: data.user, role: data.role })
+      return { success: true, role: data.role }
     } catch (error) {
       set({ error: error.message })
       return { success: false, error: error.message }
@@ -81,7 +43,8 @@ export const useAuthStore = create((set) => ({
 
   signOut: async () => {
     try {
-      await supabase.auth.signOut()
+      await authClient.signOut()
+      useProfileStore.getState().reset()
       set({ user: null, role: null })
     } catch (error) {
       set({ error: error.message })
@@ -90,12 +53,12 @@ export const useAuthStore = create((set) => ({
 
   initializeAuth: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = authClient.getCurrentSession()
       if (session?.user) {
-        const userRole = await resolveUserRole(session.user)
-        set({ user: session.user, role: userRole })
+        set({ user: session.user, role: session.role || session.user.role })
       }
     } catch (error) {
+      console.error('Error initializing auth:', error)
       set({ error: error.message })
     } finally {
       set({ loading: false })

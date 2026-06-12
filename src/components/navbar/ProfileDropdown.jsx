@@ -3,8 +3,14 @@ import { FaUserCircle, FaTimes } from 'react-icons/fa'
 import { useAuthStore } from '@/stores/authStore'
 import { useProfileStore } from '@/stores/useProfileStore'
 
+const ROLE_LABELS = {
+  producer: 'Productor',
+  consumer: 'Consumidor',
+  admin: 'Administrador',
+}
+
 export default function ProfileDropdown() {
-  const { user } = useAuthStore()
+  const { user, role } = useAuthStore()
   const { profile, loading, error, fetchProfile, updateProfile, clearError } = useProfileStore()
 
   const [isOpen, setIsOpen] = useState(false)
@@ -21,9 +27,10 @@ export default function ProfileDropdown() {
   const dropdownRef = useRef(null)
   const buttonRef = useRef(null)
 
-  // Fetch profile on mount
+  // Fetch profile on mount o cuando cambia el usuario logueado
+  // (compara por id para no mostrar datos cacheados de otro usuario)
   useEffect(() => {
-    if (user?.id && !profile) {
+    if (user?.id && profile?.id !== user.id) {
       fetchProfile(user.id)
     }
   }, [user?.id, profile, fetchProfile])
@@ -104,7 +111,7 @@ export default function ProfileDropdown() {
     }
 
     setIsSaving(true)
-    const result = await updateProfile(user.id, {
+    const result = await updateProfile({
       first_name: editForm.first_name.trim(),
       last_name: editForm.last_name.trim(),
       phone: editForm.phone.trim() || null
@@ -129,6 +136,8 @@ export default function ProfileDropdown() {
     : 'Cargando...'
 
   const displayPhone = profile?.phone || 'No registrado'
+
+  const roleLabel = ROLE_LABELS[profile?.role || role] || 'No registrado'
 
   return (
     <div className="relative">
@@ -162,6 +171,12 @@ export default function ProfileDropdown() {
             <div className="pb-3 border-b border-gray-200">
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Email</p>
               <p className="text-sm text-gray-800 font-medium mt-1">{profile?.email || '-'}</p>
+            </div>
+
+            {/* Rol (no editable - definido en el registro) */}
+            <div className="pb-3 border-b border-gray-200">
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Rol</p>
+              <p className="text-sm text-gray-800 font-medium mt-1">{roleLabel}</p>
             </div>
 
             {/* Name */}

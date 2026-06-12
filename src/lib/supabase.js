@@ -1,179 +1,334 @@
 // ============================================================
-// API CLIENT - Seguro
+// SUPABASE CLIENT - Acceso directo
 // ============================================================
-// 🔐 IMPORTANTE: Este cliente NO expone credenciales de BD
-// Todas las peticiones van a través del API Gateway (backend)
-// Las credenciales de Supabase están seguras en el servidor
+// Arquitectura: Usuario → Vercel (frontend) → Supabase (directo)
+//
+// 🔑 Usa la ANON KEY (pública por diseño). La seguridad depende
+//    de las políticas RLS configuradas en la base de datos.
+//    El SERVICE_KEY NUNCA debe estar en el frontend.
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+import { createClient } from '@supabase/supabase-js'
 
-// Helper para fetch con manejo de errores
-async function apiCall(endpoint, options = {}) {
-  const token = localStorage.getItem('auth_token')
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  }
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Falta VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en el entorno')
+}
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
+// Cliente único. supabase-js gestiona la sesión (JWT) y su refresco,
+// de modo que RLS se aplica automáticamente en cada query.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+})
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    })
+// ------------------------------------------------------------
+// Helpers de persistencia ligera (para lecturas síncronas en
+// initializeAuth). supabase-js mantiene su propia sesión aparte.
+// ------------------------------------------------------------
+const storeLocalUser = (user, role) => {
+  const userWithRole = { ...user, role }
+  localStorage.setItem('user', JSON.stringify(userWithRole))
+  return userWithRole
+}
 
-    // Si no autenticado, limpiar token
-    if (response.status === 401) {
-      localStorage.removeItem('auth_token')
-      window.location.href = '/login'
-    }
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || `Error HTTP ${response.status}`)
-    }
-
-    return data
-  } catch (error) {
-    console.error('❌ API Error:', error.message)
-    throw error
-  }
+const clearLocalUser = () => {
+  localStorage.removeItem('user')
+  localStorage.removeItem('auth_token')
 }
 
 // ============================================================
-// MÉTODOS DE AUTENTICACIÓN
+// AUTENTICACIÓN
 // ============================================================
 
 export const authClient = {
-  // Sign Up
-  async signUp(email, password, role, firstName, lastName) {
-    const data = await apiCall('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        password,
+  // Sign Up — registro + perfil en tabla users (sin confirmación de email)
+  async signUp(email, password, role, firstName, lastName, phone) {
+    const normalizedEmail = email.toLowerCase().trim()
+
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        data: { first_name: firstName, last_name: lastName },
+      },
+    })
+
+    if (error) {
+      if (error.message?.toLowerCase().includes('already registered')) {
+        throw new Error('Este email ya está registrado. Por favor inicia sesión.')
+      }
+      throw new Error(error.message)
+    }
+
+    if (!data.user) {
+      throw new Error('No se pudo crear el usuario')
+    }
+
+    // Guardar perfil en la tabla users. Se usa upsert porque puede existir
+    // un trigger en auth.users que crea la fila automáticamente al registrarse
+    // (RLS exige auth.uid() = id tanto para INSERT como para UPDATE).
+    const { error: insertError } = await supabase.from('users').upsert(
+      {
+        id: data.user.id,
+        email: normalizedEmail,
         role,
         first_name: firstName,
         last_name: lastName,
-      }),
-    })
+        phone: phone || null,
+      },
+      { onConflict: 'id' }
+    )
 
-    return data
+    if (insertError) {
+      throw new Error(`Error guardando perfil: ${insertError.message}`)
+    }
+
+    const userWithRole = storeLocalUser(
+      {
+        id: data.user.id,
+        email: normalizedEmail,
+        first_name: firstName,
+        last_name: lastName,
+      },
+      role
+    )
+
+    return {
+      user: userWithRole,
+      role,
+      session: data.session,
+    }
   },
 
   // Sign In
   async signIn(email, password) {
-    const data = await apiCall('/auth/signin', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
     })
 
-    if (data.session?.access_token) {
-      localStorage.setItem('auth_token', data.session.access_token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+    if (error) {
+      throw new Error(error.message)
     }
 
-    return data
+    if (!data.session) {
+      throw new Error('Error generando sesión')
+    }
+
+    // Leer perfil/rol desde la tabla users
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id, email, first_name, last_name, role')
+      .eq('id', data.user.id)
+      .single()
+
+    const role = profile?.role || 'consumer'
+
+    const userWithRole = storeLocalUser(
+      {
+        id: data.user.id,
+        email: data.user.email,
+        first_name: profile?.first_name ?? null,
+        last_name: profile?.last_name ?? null,
+      },
+      role
+    )
+
+    return {
+      user: userWithRole,
+      role,
+      session: data.session,
+    }
   },
 
   // Sign Out
-  signOut() {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user')
+  async signOut() {
+    await supabase.auth.signOut()
+    clearLocalUser()
   },
 
-  // Get Current Session
+  // Sesión actual (síncrona, desde localStorage)
   getCurrentSession() {
-    const token = localStorage.getItem('auth_token')
-    const user = localStorage.getItem('user')
+    const userStr = localStorage.getItem('user')
+    if (!userStr) return null
 
-    if (!token || !user) return null
-
-    return {
-      access_token: token,
-      user: JSON.parse(user),
+    try {
+      const user = JSON.parse(userStr)
+      return { user, role: user.role }
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error)
+      return null
     }
   },
 
-  // Get Current User
+  // Usuario actual (síncrono, desde localStorage)
   getCurrentUser() {
-    const user = localStorage.getItem('user')
-    return user ? JSON.parse(user) : null
+    const userStr = localStorage.getItem('user')
+    if (!userStr) return null
+    try {
+      return JSON.parse(userStr)
+    } catch {
+      return null
+    }
+  },
+
+  // Verificación de email previa al login (deshabilitada en UI).
+  // Con RLS no es posible leer perfiles ajenos desde el cliente.
+  async verifyUserExists() {
+    return { exists: false }
   },
 }
 
 // ============================================================
-// MÉTODOS DE PRODUCTOS
+// PRODUCTOS
 // ============================================================
 
 export const productClient = {
-  // Get All Products
   async getProducts(page = 0, limit = 20) {
-    return await apiCall(`/products?page=${page}&limit=${limit}`)
+    const offset = page * limit
+
+    const { data, error, count } = await supabase
+      .from('products')
+      .select('*', { count: 'exact' })
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) throw new Error(error.message)
+
+    return {
+      data: data || [],
+      page,
+      limit,
+      total: count ?? 0,
+      totalPages: count ? Math.ceil(count / limit) : 0,
+    }
   },
 
-  // Get Product by ID
   async getProductById(id) {
-    return await apiCall(`/products/${id}`)
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw new Error('Producto no encontrado')
+    return data
   },
 
-  // Create Product
   async createProduct(productData) {
-    return await apiCall('/products', {
-      method: 'POST',
-      body: JSON.stringify(productData),
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Debes iniciar sesión')
+
+    const { data, error } = await supabase
+      .from('products')
+      .insert({
+        producer_id: user.id,
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        quantity: productData.quantity,
+        quantity_notes: productData.quantity_notes || null,
+        availability_frequency: productData.availability_frequency || null,
+        category: productData.category,
+        image_path: productData.image_path || null,
+        is_active: true,
+      })
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return data
   },
 
-  // Update Product
   async updateProduct(id, productData) {
-    return await apiCall(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(productData),
-    })
+    const { data, error } = await supabase
+      .from('products')
+      .update(productData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return data
   },
 
-  // Delete Product
   async deleteProduct(id) {
-    return await apiCall(`/products/${id}`, {
-      method: 'DELETE',
-    })
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+    return { message: 'Producto eliminado' }
   },
 }
 
 // ============================================================
-// MÉTODOS DE USUARIOS
+// USUARIOS
 // ============================================================
 
 export const userClient = {
-  // Get Current User Profile
   async getCurrentProfile() {
-    return await apiCall('/users/me')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('No autenticado')
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (error) throw new Error(error.message)
+    return data
   },
 
-  // Update User Profile
   async updateProfile(profileData) {
-    return await apiCall('/users/me', {
-      method: 'PUT',
-      body: JSON.stringify(profileData),
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('No autenticado')
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(profileData)
+      .eq('id', user.id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    return data
+  },
+
+  // Teléfonos de productores por IDs (para el botón de WhatsApp del catálogo)
+  async getPhonesByIds(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return []
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, phone')
+      .in('id', ids)
+
+    if (error) throw new Error(error.message)
+    return data || []
   },
 }
 
 // ============================================================
-// HEALTH CHECK
+// STORAGE
 // ============================================================
 
-export async function checkServerHealth() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/health`)
-    return response.ok
-  } catch {
-    return false
-  }
+// Sube una imagen de producto al bucket y devuelve su path.
+export async function uploadProductImage(file, userId) {
+  const fileExt = file.name.split('.').pop().toLowerCase()
+  const fileName = `products/${userId}-${Date.now()}.${fileExt}`
+
+  const { error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, {
+      contentType: file.type,
+      upsert: false,
+    })
+
+  if (error) throw new Error(error.message)
+  return { path: fileName }
 }

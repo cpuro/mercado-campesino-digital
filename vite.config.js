@@ -15,6 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    strictPort: true,
     open: true,
     allowedHosts: [
       'hrtmxx-ip-152-202-185-5.tunnelmole.net',

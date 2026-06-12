@@ -1,11 +1,7 @@
-import { supabase } from '@/lib/supabase'
-
+// storage.js - reemplaza todo el archivo
 export const getProductImageUrl = (path) => {
   if (!path) return null
 
-  return supabase
-    .storage
-    .from('product-images')
-    .getPublicUrl(path)
-    .data.publicUrl
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  return `${supabaseUrl}/storage/v1/object/public/product-images/${path}`
 }

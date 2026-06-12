@@ -101,12 +101,9 @@ yarn install
 Crear archivo `.env.local` en la raíz del proyecto:
 
 ```env
-# Supabase
+# Supabase (acceso directo desde el frontend)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-
-# API Base (cuando esté lista)
-VITE_API_BASE_URL=http://localhost:3001
 ```
 
 Obtener estas claves desde tu proyecto Supabase:

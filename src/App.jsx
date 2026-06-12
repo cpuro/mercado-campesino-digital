@@ -17,7 +17,15 @@ function App() {
   const { initializeAuth, user, role, loading } = useAuthStore()
 
   useEffect(() => {
-    initializeAuth()
+    // Inicializar autenticación solo una vez al montar
+    const init = async () => {
+      try {
+        await initializeAuth()
+      } catch (error) {
+        console.error('Error inicializando auth:', error)
+      }
+    }
+    init()
   }, [])
 
   if (loading) {

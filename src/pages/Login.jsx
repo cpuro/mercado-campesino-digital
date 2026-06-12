@@ -1,21 +1,124 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
+import { loginSchema, validateData, sanitizeData } from '@/lib/validation'
+import { authClient } from '@/lib/supabase'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { signIn, loading, error } = useAuthStore()
+  const { signIn, loading, error: authError } = useAuthStore()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
+  
+  // Estado para verificación de usuario (opcional)
+  const [userStatus, setUserStatus] = useState(null)
+  const [userInfo, setUserInfo] = useState(null)
+  const verifyTimeoutRef = useRef(null)
+  
+  // Flag para deshabilitar verificación si hay problemas
+  const enableEmailVerification = false
+
+  // Función para verificar si el usuario existe
+  const verifyEmail = useCallback(async (email) => {
+    if (!email || !email.includes('@')) {
+      setUserStatus(null)
+      setUserInfo(null)
+      return
+    }
+
+    try {
+      setUserStatus('loading')
+
+      const result = await authClient.verifyUserExists(email)
+      
+      if (result.error) {
+        // Si hay error en la verificación, simplemente no mostrar nada
+        setUserStatus(null)
+        setUserInfo(null)
+      } else if (result.exists) {
+        setUserStatus('exists')
+        setUserInfo(result.user)
+      } else {
+        setUserStatus('not_found')
+        setUserInfo(null)
+      }
+    } catch (error) {
+      console.error('Error verificando email:', error)
+      // Silenciar error de verificación para no bloquear el formulario
+      setUserStatus(null)
+      setUserInfo(null)
+    }
+  }, [])
+
+  // Debounce para la verificación (espera 500ms después de escribir)
+  const handleEmailChange = (e) => {
+    const email = e.target.value
+    setFormData(prev => ({ ...prev, email }))
+
+    // Limpiar error del campo
+    if (validationErrors.email) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors.email
+        return newErrors
+      })
+    }
+
+    // Si la verificación está deshabilitada, no hacer nada
+    if (!enableEmailVerification) return
+
+    // Cancelar timeout anterior
+    if (verifyTimeoutRef.current) {
+      clearTimeout(verifyTimeoutRef.current)
+    }
+
+    // Nuevo timeout para verificar (debounce)
+    verifyTimeoutRef.current = setTimeout(() => {
+      verifyEmail(email)
+    }, 300)
+  }
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (verifyTimeoutRef.current) {
+        clearTimeout(verifyTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    if (name === 'email') {
+      handleEmailChange(e)
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+      // Limpiar error del campo cuando el usuario empieza a escribir
+      if (validationErrors[name]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev }
+          delete newErrors[name]
+          return newErrors
+        })
+      }
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const result = await signIn(formData.email, formData.password)
+    
+    // ✅ Validar con Zod
+    const validation = validateData(loginSchema, formData)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      return
+    }
+
+    // ✅ Sanitizar datos antes de enviar
+    const sanitized = sanitizeData(validation.data)
+    
+    const result = await signIn(sanitized.email, sanitized.password)
     if (result.success) {
       const destination =
         result.role === 'admin'
@@ -37,10 +140,10 @@ export default function Login() {
           <p className="text-gray-600">Inicia sesión en tu cuenta</p>
         </div>
 
-        {error && (
+        {authError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            <p className="font-semibold mb-2">❌ {error}</p>
-            {error.includes('Invalid login credentials') && (
+            <p className="font-semibold mb-2">❌ {authError}</p>
+            {authError.includes('Invalid login credentials') && (
               <p className="text-sm">
                 <Link 
                   to="/forgot-password" 
@@ -61,9 +164,43 @@ export default function Login() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="input-base"
+              className={`input-base ${validationErrors.email ? 'border-red-500' : ''}`}
+              placeholder="tu@email.com"
               required
             />
+            {validationErrors.email && (
+              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.email}</p>
+            )}
+            
+            {/* Estado de verificación */}
+            {userStatus === 'loading' && formData.email && (
+              <div className="flex items-center gap-2 mt-2 text-blue-600">
+                <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
+                <span className="text-sm">Verificando...</span>
+              </div>
+            )}
+            {userStatus === 'exists' && userInfo && (
+              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-700 text-sm font-medium">
+                  ✅ Usuario registrado
+                </p>
+                <p className="text-green-600 text-xs mt-1">
+                  {userInfo.first_name} {userInfo.last_name} • {userInfo.role === 'producer' ? 'Productor' : 'Consumidor'}
+                </p>
+              </div>
+            )}
+            {userStatus === 'not_found' && formData.email && (
+              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-700 text-sm font-medium">
+                  ⚠️ Usuario no registrado
+                </p>
+                <p className="text-yellow-600 text-xs mt-1">
+                  <Link to="/register" className="hover:underline font-semibold">
+                    Regístrate aquí
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -74,7 +211,8 @@ export default function Login() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="input-base pr-10"
+                className={`input-base pr-10 ${validationErrors.password ? 'border-red-500' : ''}`}
+                placeholder="Mínimo 8 caracteres"
                 required
               />
               <button
@@ -97,6 +235,9 @@ export default function Login() {
                 )}
               </button>
             </div>
+            {validationErrors.password && (
+              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.password}</p>
+            )}
           </div>
 
           <button

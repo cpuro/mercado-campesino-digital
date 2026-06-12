@@ -1,21 +1,17 @@
 import { create } from 'zustand'
-import { supabase } from '@/lib/supabase'
+import { productClient } from '@/lib/supabase'
 
+// ✅ Usa API Gateway (seguro - sin credenciales de BD)
 export const useProductStore = create((set, get) => ({
   products: [],
   loading: false,
   error: null,
 
-  fetchProducts: async () => {
+  fetchProducts: async (page = 0, limit = 20) => {
     try {
       set({ loading: true, error: null })
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      set({ products: data || [] })
+      const data = await productClient.getProducts(page, limit)
+      set({ products: data.data  || [] })
     } catch (error) {
       set({ error: error.message })
     } finally {
@@ -26,13 +22,7 @@ export const useProductStore = create((set, get) => ({
   fetchProductById: async (id) => {
     try {
       set({ loading: true, error: null })
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single()
-      
-      if (error) throw error
+      const data = await productClient.getProductById(id)
       return data
     } catch (error) {
       set({ error: error.message })
@@ -45,13 +35,8 @@ export const useProductStore = create((set, get) => ({
   addProduct: async (productData) => {
     try {
       set({ loading: true, error: null })
-      const { data, error } = await supabase
-        .from('products')
-        .insert([productData])
-        .select()
-      
-      if (error) throw error
-      set({ products: [data[0], ...get().products] })
+      const data = await productClient.createProduct(productData)
+      set({ products: [data, ...get().products] })
       return { success: true }
     } catch (error) {
       set({ error: error.message })
@@ -64,12 +49,7 @@ export const useProductStore = create((set, get) => ({
   deleteProduct: async (id) => {
     try {
       set({ loading: true, error: null })
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id)
-      
-      if (error) throw error
+      await productClient.deleteProduct(id)
       set({ products: get().products.filter(p => p.id !== id) })
       return { success: true }
     } catch (error) {

@@ -1,6 +1,7 @@
 /**
  * Authentication Service
  * 
+ * ✅ Usa API Gateway (sin credenciales de BD)
  * Maneja toda la lógica de autenticación
  * Separada de UI y state management
  * 
@@ -8,38 +9,9 @@
  * - Sign up / Sign in / Sign out
  * - Validación de credenciales
  * - Gestión de sesiones
- * - Obtener datos del usuario
  */
 
-import { supabase } from '@/lib/supabase'
-
-const resolveUserRole = async (user) => {
-  const metadataRole = user?.user_metadata?.role || 'consumer'
-
-  if (metadataRole === 'admin') {
-    return 'admin'
-  }
-
-  if (!user?.id) {
-    return metadataRole
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (error) {
-      throw error
-    }
-
-    return data?.role || metadataRole
-  } catch {
-    return metadataRole
-  }
-}
+import { authClient } from '@/lib/supabase'
 
 class AuthService {
   /**
@@ -47,9 +19,10 @@ class AuthService {
    * @param {string} email - Email del usuario
    * @param {string} password - Contraseña
    * @param {string} role - Rol: 'admin' | 'producer' | 'consumer'
-   * @returns {Promise<{success: boolean, user: Object, error: string}>}
+   * @param {string} firstName - Nombre
+   * @param {string} lastName - Apellido
    */
-  async signUp(email, password, role = 'consumer') {
+  async signUp(email, password, role = 'consumer', firstName = '', lastName = '') {
     try {
       if (!this.validateEmail(email)) {
         throw new Error('Email inválido')
@@ -58,20 +31,12 @@ class AuthService {
         throw new Error('La contraseña debe tener al menos 8 caracteres')
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { role }
-        }
-      })
-
-      if (error) throw error
+      const data = await authClient.signUp(email, password, role, firstName, lastName)
 
       return {
         success: true,
         user: data.user,
-        message: 'Verificá tu email para confirmar la cuenta'
+        message: 'Cuenta creada exitosamente'
       }
     } catch (error) {
       return {
@@ -85,26 +50,16 @@ class AuthService {
    * Inicia sesión con email y contraseña
    * @param {string} email 
    * @param {string} password 
-   * @returns {Promise<{success: boolean, user: Object, role: string, token: string, error: string}>}
    */
   async signIn(email, password) {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (error) throw error
-
-      const user = data.user
-      const role = await resolveUserRole(user)
-      const token = data.session?.access_token
+      const data = await authClient.signIn(email, password)
 
       return {
         success: true,
-        user,
-        role,
-        token
+        user: data.user,
+        role: data.role,
+        token: data.session?.access_token
       }
     } catch (error) {
       return {
@@ -116,13 +71,10 @@ class AuthService {
 
   /**
    * Cierra la sesión actual
-   * @returns {Promise<{success: boolean, error: string}>}
    */
   async signOut() {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-
+      authClient.signOut()
       return { success: true }
     } catch (error) {
       return {
@@ -134,18 +86,16 @@ class AuthService {
 
   /**
    * Obtiene la sesión actual
-   * @returns {Promise<{session: Object, user: Object, role: string}>}
    */
   async getCurrentSession() {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) throw error
-
+      const session = authClient.getCurrentSession()
+      
       if (session?.user) {
         return {
           session,
           user: session.user,
-          role: await resolveUserRole(session.user)
+          role: session.role || 'consumer'
         }
       }
 
@@ -157,28 +107,10 @@ class AuthService {
   }
 
   /**
-   * Reinicia contraseña
-   * @param {string} email 
-   * @returns {Promise<{success: boolean, error: string}>}
+   * Obtiene el usuario actual
    */
-  async resetPassword(email) {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
-      if (error) throw error
-
-      return {
-        success: true,
-        message: 'Revisa tu email para instrucciones de reinicio'
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      }
-    }
+  getCurrentUser() {
+    return authClient.getCurrentUser()
   }
 
   /**

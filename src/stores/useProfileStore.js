@@ -1,25 +1,16 @@
 import { create } from 'zustand'
-import { supabase } from '@/lib/supabase'
+import { userClient } from '@/lib/supabase'
 
+// ✅ Usa API Gateway (seguro - sin credenciales de BD)
 export const useProfileStore = create((set) => ({
   profile: null,
   loading: false,
   error: null,
 
-  fetchProfile: async (userId) => {
+  fetchProfile: async () => {
     try {
       set({ loading: true, error: null })
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name, phone, avatar_url, role')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        throw error
-      }
-
+      const data = await userClient.getCurrentProfile()
       set({ profile: data, loading: false })
     } catch (err) {
       console.error('Error fetching profile:', err)
@@ -27,24 +18,10 @@ export const useProfileStore = create((set) => ({
     }
   },
 
-  updateProfile: async (userId, updates) => {
+  updateProfile: async (updates) => {
     try {
       set({ loading: true, error: null })
-
-      const { data, error } = await supabase
-        .from('users')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-        .select('id, email, first_name, last_name, phone, avatar_url, role')
-        .single()
-
-      if (error) {
-        throw error
-      }
-
+      const data = await userClient.updateProfile(updates)
       set({ profile: data, loading: false })
       return { success: true }
     } catch (err) {
@@ -54,5 +31,8 @@ export const useProfileStore = create((set) => ({
     }
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+
+  // Limpia el perfil cacheado (al cerrar sesión / cambiar de usuario)
+  reset: () => set({ profile: null, loading: false, error: null })
 }))

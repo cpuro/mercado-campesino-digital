@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
+import { registerSchema, validateData, sanitizeData } from '@/lib/validation'
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -15,42 +16,49 @@ const EyeOffIcon = () => (
   </svg>
 )
 
-const PasswordInput = ({ name, value, onChange, placeholder }) => {
+const PasswordInput = ({ name, value, onChange, placeholder, error }) => {
   const [show, setShow] = useState(false)
   return (
-    <div className="relative">
-      <input
-        type={show ? 'text' : 'password'}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="input-base pr-10"
-        required
-      />
-      <button
-        type="button"
-        onClick={() => setShow(prev => !prev)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-        aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-      >
-        {show ? <EyeOffIcon /> : <EyeIcon />}
-      </button>
+    <div>
+      <div className="relative">
+        <input
+          type={show ? 'text' : 'password'}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`input-base pr-10 ${error ? 'border-red-500' : ''}`}
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShow(prev => !prev)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        >
+          {show ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
+      </div>
+      {error && <p className="text-red-500 text-sm mt-1">⚠️ {error}</p>}
     </div>
   )
 }
 
 export default function Register() {
   const navigate = useNavigate()
-  const { signUp, loading, error } = useAuthStore()
+  const { signUp, loading, error: authError } = useAuthStore()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
     role: 'consumer',
     acceptTerms: false
   })
-  const [localError, setLocalError] = useState('')
+  const [validationErrors, setValidationErrors] = useState({})
+  const [successMessage, setSuccessMessage] = useState('')
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -58,28 +66,52 @@ export default function Register() {
       ...prev, 
       [name]: type === 'checkbox' ? checked : value 
     }))
-    setLocalError('')
+    // Limpiar error del campo
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      setLocalError('Las contraseñas no coinciden')
+    
+    // ✅ Validar con Zod
+    const validation = validateData(registerSchema, formData)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
       return
     }
-    if (!formData.acceptTerms) {
-      setLocalError('Debes aceptar los términos y condiciones para registrarte')
-      return
-    }
-    const result = await signUp(formData.email, formData.password, formData.role)
+
+    // ✅ Sanitizar datos antes de enviar
+    const sanitized = sanitizeData(validation.data)
+    
+    const result = await signUp(
+      sanitized.email,
+      sanitized.password,
+      sanitized.role,
+      sanitized.firstName,
+      sanitized.lastName,
+      sanitized.phone
+    )
+    
     if (result.success) {
-      if (formData.role === 'producer') {
-        navigate('/producer')
-      } else if (formData.role === 'consumer') {
-        navigate('/catalog')
-      } else {
-        navigate('/admin')
-      }
+      // ✅ Mostrar mensaje de éxito
+      setSuccessMessage('✅ ¡Usuario registrado exitosamente!')
+      
+      // ✅ Esperar 2 segundos y luego navegar
+      setTimeout(() => {
+        if (sanitized.role === 'producer') {
+          navigate('/producer')
+        } else if (sanitized.role === 'consumer') {
+          navigate('/catalog')
+        } else {
+          navigate('/admin')
+        }
+      }, 2000)
     }
   }
 
@@ -92,9 +124,15 @@ export default function Register() {
           <p className="text-gray-600">Crea una nueva cuenta</p>
         </div>
 
-        {(error || localError) && (
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-center font-semibold">
+            {successMessage}
+          </div>
+        )}
+
+        {authError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error || localError}
+            ❌ {authError}
           </div>
         )}
 
@@ -105,11 +143,64 @@ export default function Register() {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="input-base"
+              className={`input-base ${validationErrors.role ? 'border-red-500' : ''}`}
             >
               <option value="consumer">Consumidor (Quiero comprar)</option>
               <option value="producer">Productor (Quiero vender)</option>
             </select>
+            {validationErrors.role && (
+              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.role}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Nombre</label>
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                className={`input-base ${validationErrors.firstName ? 'border-red-500' : ''}`}
+                placeholder="Juan"
+                required
+              />
+              {validationErrors.firstName && (
+                <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.firstName}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Apellido</label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                className={`input-base ${validationErrors.lastName ? 'border-red-500' : ''}`}
+                placeholder="Pérez"
+                required
+              />
+              {validationErrors.lastName && (
+                <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.lastName}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Celular</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={`input-base ${validationErrors.phone ? 'border-red-500' : ''}`}
+              placeholder="+573001234567"
+              required
+            />
+            {validationErrors.phone && (
+              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.phone}</p>
+            )}
           </div>
 
           <div>
@@ -119,9 +210,13 @@ export default function Register() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="input-base"
+              className={`input-base ${validationErrors.email ? 'border-red-500' : ''}`}
+              placeholder="tu@email.com"
               required
             />
+            {validationErrors.email && (
+              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -130,6 +225,8 @@ export default function Register() {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Mín. 8 caracteres"
+              error={validationErrors.password}
             />
           </div>
 
@@ -139,47 +236,54 @@ export default function Register() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
+              placeholder="Repite tu contraseña"
+              error={validationErrors.confirmPassword}
             />
           </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="acceptTerms"
-              name="acceptTerms"
-              checked={formData.acceptTerms}
-              onChange={handleChange}
-              className="mt-1 w-4 h-4 cursor-pointer"
-              required
-            />
-            <label htmlFor="acceptTerms" className="text-sm text-gray-600 cursor-pointer">
-              Acepto los{' '}
-              <a 
-                href="/documents/politica-tratamiento-de-datos-paso-a-paso.pdf" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline font-semibold"
-              >
-                términos y condiciones
-              </a>
-              {' '}y la{' '}
-              <a 
-                href="/documents/aviso-de-privacidad-paso-a-paso.pdf" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline font-semibold"
-              >
-                política de privacidad
-              </a>
-            </label>
+          <div>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                name="acceptTerms"
+                checked={formData.acceptTerms}
+                onChange={handleChange}
+                className="mt-1 w-4 h-4 cursor-pointer"
+                required
+              />
+              <label htmlFor="acceptTerms" className="text-sm text-gray-600 cursor-pointer">
+                Acepto los{' '}
+                <a 
+                  href="/documents/politica-tratamiento-de-datos-paso-a-paso.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-semibold"
+                >
+                  términos y condiciones
+                </a>
+                {' '}y la{' '}
+                <a 
+                  href="/documents/aviso-de-privacidad-paso-a-paso.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-semibold"
+                >
+                  política de privacidad
+                </a>
+              </label>
+            </div>
+            {validationErrors.acceptTerms && (
+              <p className="text-red-500 text-sm mt-2">⚠️ {validationErrors.acceptTerms}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || successMessage}
             className="btn-primary w-full"
           >
-            {loading ? 'Creando cuenta...' : 'Registrarse'}
+            {loading ? 'Creando cuenta...' : successMessage ? 'Redirigiendo...' : 'Registrarse'}
           </button>
         </form>
 
