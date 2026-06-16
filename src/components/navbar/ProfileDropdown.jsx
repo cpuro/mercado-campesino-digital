@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { FaUserCircle, FaTimes } from 'react-icons/fa'
+import { FaTimes } from 'react-icons/fa'
 import { useAuthStore } from '@/stores/authStore'
 import { useProfileStore } from '@/stores/useProfileStore'
 
@@ -145,10 +145,9 @@ export default function ProfileDropdown() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-white hover:text-primary transition-colors duration-200"
+        className="flex items-center gap-2 text-white hover:text-white transition-colors duration-200"
       >
-        <FaUserCircle className="text-xl" />
-        <span className="hidden sm:inline text-sm">Mi Perfil</span>
+       <span className="hidden sm:inline text-extra-bold">Mi Perfil</span>
       </button>
 
       {/* Dropdown */}
@@ -158,9 +157,8 @@ export default function ProfileDropdown() {
           className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-40 animate-in fade-in slide-in-from-top-2 duration-200"
         >
           {/* Header */}
-          <div className="bg-green-700 text-white px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaUserCircle className="text-xl" />
+          <div className="bg-green-500 text-white px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-black">
               <span className="font-semibold">Mi Perfil</span>
             </div>
           </div>

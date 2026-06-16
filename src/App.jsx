@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import Navbar from '@/components/Navbar'
+import ScrollToTop from '@/components/ScrollToTop'
 import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
@@ -11,6 +12,8 @@ import Catalog from '@/pages/Catalog'
 import CreateProduct from '@/pages/CreateProduct'
 import ProducerDashboard from '@/pages/ProducerDashboard'
 import AdminDashboard from '@/pages/AdminDashboard'
+import QuienesSomos from '@/pages/QuienesSomos'
+import Contacto from '@/pages/Contacto'
 import Footer from '@/components/Footer';
 
 function App() {
@@ -41,18 +44,18 @@ function App() {
 
   return (
     <Router>
-      {user && <Navbar />}
-      <main className={user ? 'min-h-screen bg-gray-50' : ''}>
+      <ScrollToTop />
+      <Navbar />
+      <main className="min-h-screen bg-gray-50">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
           <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route
-            path="/catalog"
-            element={user ? <Catalog /> : <Navigate to="/login" />}
-          />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/quienes-somos" element={<QuienesSomos />} />
+          <Route path="/contacto" element={<Contacto />} />
           <Route
             path="/create-product"
             element={user && role === 'producer' ? <CreateProduct /> : <Navigate to="/" />}

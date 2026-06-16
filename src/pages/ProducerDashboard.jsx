@@ -120,7 +120,7 @@ export default function ProducerDashboard() {
 
   return (
     <div className="min-h-screen px-4 py-12 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
-      <div className="absolute inset-0 bg-white opacity-50"></div>
+      <div className="absolute inset-0 bg-white opacity-10"></div>
       <div className="max-w-6xl mx-auto p-4 relative z-10">
 
         {showProfileForm && (
@@ -176,26 +176,26 @@ export default function ProducerDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Panel del Productor</h1>
-            <p className="text-gray-600">Bienvenido, {fullName}</p>
+            <p className="text-black">Bienvenido, {fullName}</p>
 
             {producerProfile?.phone && (
-              <p className="text-xs text-green-600 mt-1">
-                ✅ WhatsApp: {producerProfile.phone}
+              <p className="text-xs text-black mt-1">
+                 WhatsApp: {producerProfile.phone}
               </p>
             )}
 
             {producerProfile && (
               <button
                 onClick={() => setShowProfileForm(true)}
-                className="text-sm text-blue-600 hover:underline mt-2 block"
+                className="text-sm text-black hover:underline mt-2 block"
               >
-                ✏️ Editar perfil
+               Editar perfil
               </button>
             )}
           </div>
 
           <button onClick={handleCreateProduct} className="btn-primary">
-            ➕ Nuevo producto
+            Nuevo producto
           </button>
         </div>
 
@@ -224,7 +224,7 @@ export default function ProducerDashboard() {
                   onClick={() => deleteProduct(product.id)}
                   className="btn-ghost w-full mt-3"
                 >
-                  🗑️ Eliminar
+                  Eliminar
                 </button>
               </div>
             ))

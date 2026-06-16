@@ -14,11 +14,11 @@ body {
 }
 
 .btn-primary {
-  @apply px-4 py-2 bg-primary hover:bg-green-700 text-white rounded-lg font-semibold;
+  @apply px-4 py-2 bg-green-500 hover:bg-green-700 text-black rounded-lg font-semibold;
 }
 
 .btn-secondary {
-  @apply px-4 py-2 bg-secondary hover:bg-amber-600 text-white rounded-lg font-semibold;
+  @apply px-4 py-2 bg-secondary hover:bg-amber-600 text-black rounded-lg font-semibold;
 }
 
 .btn-ghost {
@@ -27,6 +27,12 @@ body {
 
 .card {
   @apply bg-white rounded-lg shadow-sm p-4 border border-gray-100;
+}
+
+/* Sombra sutil para el navbar: el contenido pasa "por debajo" flotando */
+.navbar {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2px; /* Espacio antes del contenido */
 }
 
 .input-base {

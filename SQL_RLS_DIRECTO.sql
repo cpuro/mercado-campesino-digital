@@ -56,13 +56,15 @@ CREATE POLICY "Authenticated can read contact info"
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Anyone authenticated can read active products" ON products;
+DROP POLICY IF EXISTS "Anyone can read active products" ON products;
 DROP POLICY IF EXISTS "Producers can insert their own products" ON products;
 DROP POLICY IF EXISTS "Owners can update their products" ON products;
 DROP POLICY IF EXISTS "Owners can delete their products" ON products;
 
--- SELECT: usuarios autenticados ven los productos activos
-CREATE POLICY "Anyone authenticated can read active products"
-  ON products FOR SELECT TO authenticated
+-- SELECT: CUALQUIER visitante (anónimo o autenticado) ve los productos activos.
+-- Esto permite el catálogo público sin necesidad de registro.
+CREATE POLICY "Anyone can read active products"
+  ON products FOR SELECT TO anon, authenticated
   USING (is_active = true);
 
 -- INSERT: solo productores, y solo a su propio nombre
@@ -108,6 +110,18 @@ CREATE POLICY "Public can read product images"
 CREATE POLICY "Authenticated can upload product images"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'product-images');
+
+
+-- ============================================================================
+-- VISTA: producer_contacts (teléfono del productor para visitantes anónimos)
+-- ============================================================================
+-- Expone SOLO id y phone de los productores, sin el resto de datos de users
+-- (email, etc.). El catálogo público la usa para el botón de WhatsApp.
+CREATE OR REPLACE VIEW public.producer_contacts AS
+  SELECT id, phone FROM public.users WHERE role = 'producer';
+
+-- Permitir lectura a anónimos y autenticados.
+GRANT SELECT ON public.producer_contacts TO anon, authenticated;
 
 
 -- ============================================================================

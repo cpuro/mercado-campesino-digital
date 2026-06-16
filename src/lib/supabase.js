@@ -310,12 +310,14 @@ export const userClient = {
     return data
   },
 
-  // Teléfonos de productores por IDs (para el botón de WhatsApp del catálogo)
+  // Teléfonos de productores por IDs (para el botón de WhatsApp del catálogo).
+  // Usa la vista pública producer_contacts (solo id y phone), accesible por
+  // visitantes anónimos sin exponer el resto de datos de la tabla users.
   async getPhonesByIds(ids) {
     if (!Array.isArray(ids) || ids.length === 0) return []
 
     const { data, error } = await supabase
-      .from('users')
+      .from('producer_contacts')
       .select('id, phone')
       .in('id', ids)
 
