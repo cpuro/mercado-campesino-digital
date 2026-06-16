@@ -1,7 +1,7 @@
 // Página pública "Quiénes Somos"
 export default function QuienesSomos() {
   return (
-    <div className="min-h-screen px-4 py-12 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
+    <div className="min-h-screen px-4 py-12  bg-cover bg-center bg-no-repeat bg-fixed relativ" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
       {/* Capa blanca semitransparente sobre el fondo */}
       <div className="absolute inset-0"></div>
 

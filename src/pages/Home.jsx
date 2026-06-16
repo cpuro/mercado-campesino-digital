@@ -9,7 +9,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen px-4 py-12 bg-cover bg-center bg-no-repeat bg-fixed relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
-      <div className="absolute inset-0 bg-white opacity-10"></div>
+      <div className="absolute inset-0 "></div>
       <div className="max-w-7xl mx-auto p-4 relative z-10">
 
         {/* ===================== HERO ===================== */}
@@ -22,10 +22,10 @@ export default function Home() {
           <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">
             Mercado Campesino Digital
           </h1>
-          <p className="text-xl text-black mb-2">
+          <p className="text-xl font-bold text-black mb-2">
             Conectamos productores rurales con consumidores urbanos
           </p>
-          <p className="text-lg text-black mb-6">
+          <p className="text-lg font-bold text-black mb-6">
             Compra directamente al productor por WhatsApp.
           </p>
 
@@ -56,7 +56,7 @@ export default function Home() {
 
         {/* ===================== PRODUCTOS ===================== */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-black mb-6 text-center">
+          <h2 className="text-3xl font-bold text-black mb-6 text-center  bg-white bg-opacity-50 p-2">
             Productos disponibles
           </h2>
           <ProductBrowser />

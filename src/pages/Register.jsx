@@ -102,7 +102,7 @@ export default function Register() {
       // ✅ Mostrar mensaje de éxito
       setSuccessMessage('✅ ¡Usuario registrado exitosamente!')
       
-      // ✅ Esperar 2 segundos y luego navegar
+      //  Esperar 2 segundos y luego navegar
       setTimeout(() => {
         if (sanitized.role === 'producer') {
           navigate('/producer')
@@ -116,10 +116,10 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
-      <div className="absolute inset-0 bg-white opacity-50"></div>
-      <div className="card w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat bg-fixed relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
+      <div className="absolute inset-0  "></div>
+      <div className="card w-full max-w-md relative z-10 mt-10 mb-10">
+        <div className="text-center mb-8 ">
           <h1 className="text-3xl font-bold text-primary mb-2">Mercado Campesino</h1>
           <p className="text-gray-600">Crea una nueva cuenta</p>
         </div>
@@ -139,18 +139,19 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">¿Eres?</label>
-            <select
+             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
               className={`input-base ${validationErrors.role ? 'border-red-500' : ''}`}
             >
-              <option value="consumer">Consumidor (Quiero comprar)</option>
               <option value="producer">Productor (Quiero vender)</option>
+              <option value="consumer">Consumidor (Quiero comprar)</option>
+              
             </select>
             {validationErrors.role && (
               <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.role}</p>
-            )}
+            )} 
           </div>
 
           <div className="grid grid-cols-2 gap-4">

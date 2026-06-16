@@ -92,7 +92,8 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              // En móvil estos botones se muestran dentro del menú hamburguesa
+              <div className="hidden sm:flex items-center gap-2">
                 <Link to="/login" className="px-2 text-sm font-medium text-white hover:text-gray-300">
                   Iniciar sesión
                 </Link>
@@ -122,6 +123,26 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Iniciar sesión / Registrarse dentro del menú (solo visitantes anónimos) */}
+            {!user && (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/5"
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md bg-green-600 px-3 py-2 text-base font-medium text-white hover:bg-green-700"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

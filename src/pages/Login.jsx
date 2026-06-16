@@ -132,12 +132,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
-      <div className="absolute inset-0 bg-white opacity-50"></div>
+    <div className="min-h-screen flex items-center justify-center px-4  bg-cover bg-center bg-no-repeat bg-fixed relative" style={{ backgroundImage: 'url(/logos/fondo.png)' }}>
+      <div className="absolute inset-0"></div>
       <div className="card w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">Mercado Campesino</h1>
-          <p className="text-gray-600">Inicia sesión en tu cuenta</p>
+          <p className="text-black">Inicia sesión en tu cuenta</p>
         </div>
 
         {authError && (

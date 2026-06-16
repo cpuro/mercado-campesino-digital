@@ -14,11 +14,11 @@ body {
 }
 
 .btn-primary {
-  @apply px-4 py-2 bg-green-500 hover:bg-green-700 text-black rounded-lg font-semibold;
+  @apply px-4 py-2 bg-green-500 hover:bg-green-700 text-white rounded-lg font-semibold;
 }
 
 .btn-secondary {
-  @apply px-4 py-2 bg-secondary hover:bg-amber-600 text-black rounded-lg font-semibold;
+  @apply px-4 py-2 bg-secondary hover:bg-amber-600 text-white rounded-lg font-semibold;
 }
 
 .btn-ghost {
