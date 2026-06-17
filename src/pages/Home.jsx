@@ -13,13 +13,13 @@ export default function Home() {
       <div className="max-w-7xl mx-auto p-4 relative z-10">
 
         {/* ===================== HERO ===================== */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-10  bg-white bg-opacity-40 p-6 rounded-lg">
           <img
             src="/logos/LOGOMERCADOCAMPESINO.png"
             alt="Mercado Campesino Digital"
             className="h-[182px] mx-auto mb-4"
           />
-          <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-black mb-4 ">
             Mercado Campesino Digital
           </h1>
           <p className="text-xl font-bold text-black mb-2">
@@ -56,7 +56,7 @@ export default function Home() {
 
         {/* ===================== PRODUCTOS ===================== */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-black mb-6 text-center  bg-white bg-opacity-50 p-2">
+          <h2 className="text-3xl font-bold text-black mb-6 text-center  bg-white bg-opacity-40 p-2">
             Productos disponibles
           </h2>
           <ProductBrowser />

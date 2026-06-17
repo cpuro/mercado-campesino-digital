@@ -24,8 +24,8 @@ export default function Navbar() {
   // Clases de enlace (escritorio)
   const linkClass = (to) =>
     isCurrent(to)
-      ? 'rounded-md bg-gray-950/50 px-3 py-2 text-sm font-medium text-white'
-      : 'rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-white/5 hover:text-white'
+      ? 'rounded-md bg-gray-950/50 px-3 py-2 text-base font-medium text-white'
+      : 'rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/5 hover:text-white'
 
   // Clases de enlace (móvil)
   const mobileLinkClass = (to) =>
@@ -34,7 +34,7 @@ export default function Navbar() {
       : 'block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/5 hover:text-white'
 
   return (
-    <nav className="sticky top-0 z-50 relative bg-green-500 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10">
+    <nav className="sticky top-0 z-50 relative bg-green-800 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
 
@@ -94,12 +94,12 @@ export default function Navbar() {
             ) : (
               // En móvil estos botones se muestran dentro del menú hamburguesa
               <div className="hidden sm:flex items-center gap-2">
-                <Link to="/login" className="px-2 text-sm font-medium text-white hover:text-gray-300">
+                <Link to="/login" className="px-2 text-base font-medium text-white hover:text-gray-300">
                   Iniciar sesión
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+                  className="rounded-md bg-green-600 px-3 py-2 text-base font-medium text-white hover:bg-green-700"
                 >
                   Registrarse
                 </Link>
@@ -137,7 +137,7 @@ export default function Navbar() {
                 <Link
                   to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-md bg-green-600 px-3 py-2 text-base font-medium text-white hover:bg-green-700"
+                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-green-700"
                 >
                   Registrarse
                 </Link>

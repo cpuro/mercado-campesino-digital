@@ -1,0 +1,65 @@
+/* Tarjeta 3D para logos — adaptado de Uiverse.io by Smit-Prajapati */
+/* Clases prefijadas con "lc-" para no chocar con .card/.content/.logo del proyecto */
+
+.lc-parent {
+  width: 100%;
+  max-width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.lc-card {
+  position: relative;
+  height: 100%;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgb(34, 197, 94) 0%, rgb(29, 145, 74)  100%);
+  transition: all 0.5s ease-in-out;
+  transform-style: preserve-3d;
+  box-shadow: rgba(5, 71, 17, 0) 40px 50px 25px -40px, rgba(5, 71, 17, 0.2) 0px 25px 25px -5px; 
+}
+
+.lc-glass {
+  transform-style: preserve-3d;
+  position: absolute;
+  inset: 8px;
+  border-radius: 45px;
+  border-top-right-radius: 100%;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.349) 0%, rgba(255, 255, 255, 0.815) 100%);
+  transform: translate3d(0px, 0px, 25px);
+  border-left: 1px solid white;
+  border-bottom: 1px solid white;
+  transition: all 0.5s ease-in-out;
+}
+
+.lc-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  transform: translate3d(0, 0, 26px);
+}
+
+.lc-logo-img {
+  max-width: 78%;
+  max-height: 90px;
+  object-fit: contain;
+}
+
+.lc-title {
+  color: #00894d;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Inclinación 3D al pasar el mouse */
+.lc-parent:hover .lc-card {
+  transform: rotate3d(1, 1, 0, 30deg);
+  box-shadow: rgba(5, 71, 17, 0.3) 30px 50px 25px -40px, rgba(5, 71, 17, 0.1) 0px 25px 30px 0px;
+}

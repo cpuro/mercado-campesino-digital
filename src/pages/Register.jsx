@@ -54,7 +54,7 @@ export default function Register() {
     firstName: '',
     lastName: '',
     phone: '',
-    role: 'consumer',
+    role: 'producer', // Todo registro es de productor
     acceptTerms: false
   })
   const [validationErrors, setValidationErrors] = useState({})
@@ -121,7 +121,7 @@ export default function Register() {
       <div className="card w-full max-w-md relative z-10 mt-10 mb-10">
         <div className="text-center mb-8 ">
           <h1 className="text-3xl font-bold text-primary mb-2">Mercado Campesino</h1>
-          <p className="text-gray-600">Crea una nueva cuenta</p>
+          <p className="text-black">Crea una nueva cuenta</p>
         </div>
 
         {successMessage && (
@@ -132,27 +132,11 @@ export default function Register() {
 
         {authError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            ❌ {authError}
+            {authError}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">¿Eres?</label>
-             <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className={`input-base ${validationErrors.role ? 'border-red-500' : ''}`}
-            >
-              <option value="producer">Productor (Quiero vender)</option>
-              <option value="consumer">Consumidor (Quiero comprar)</option>
-              
-            </select>
-            {validationErrors.role && (
-              <p className="text-red-500 text-sm mt-1">⚠️ {validationErrors.role}</p>
-            )} 
-          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -253,7 +237,7 @@ export default function Register() {
                 className="mt-1 w-4 h-4 cursor-pointer"
                 required
               />
-              <label htmlFor="acceptTerms" className="text-sm text-gray-600 cursor-pointer">
+              <label htmlFor="acceptTerms" className="text-sm text-black cursor-pointer">
                 Acepto los{' '}
                 <a 
                   href="/documents/politica-tratamiento-de-datos-paso-a-paso.pdf" 
@@ -289,7 +273,7 @@ export default function Register() {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          <p className="text-gray-600">
+          <p className="text-black">
             ¿Ya tienes cuenta?{' '}
             <Link to="/login" className="text-primary hover:underline font-semibold">
               Inicia sesión

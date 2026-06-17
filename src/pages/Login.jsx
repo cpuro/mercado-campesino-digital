@@ -192,7 +192,7 @@ export default function Login() {
             {userStatus === 'not_found' && formData.email && (
               <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-yellow-700 text-sm font-medium">
-                  ⚠️ Usuario no registrado
+                  Usuario no registrado
                 </p>
                 <p className="text-yellow-600 text-xs mt-1">
                   <Link to="/register" className="hover:underline font-semibold">
@@ -255,7 +255,7 @@ export default function Login() {
               ¿Olvidaste tu contraseña?
             </Link>
           </p>
-          <p className="text-gray-600">
+          <p className="text-black">
             ¿No tienes cuenta?{' '}
             <Link to="/register" className="text-primary hover:underline font-semibold">
               Regístrate aquí
