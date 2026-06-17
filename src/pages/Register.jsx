@@ -121,7 +121,7 @@ export default function Register() {
       <div className="card w-full max-w-md relative z-10 mt-10 mb-10">
         <div className="text-center mb-8 ">
           <h1 className="text-3xl font-bold text-green-800 mb-2">Mercado Campesino</h1>
-          <p className="text-black">Crea una nueva cuenta</p>
+          <p className="text-black">Complete el formulario para registrarte</p>
         </div>
 
         {successMessage && (
@@ -140,7 +140,7 @@ export default function Register() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Nombre</label>
+              <label className="block text-sm font-medium mb-2">Nombres</label>
               <input
                 type="text"
                 name="firstName"
@@ -156,7 +156,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Apellido</label>
+              <label className="block text-sm font-medium mb-2">Apellidos</label>
               <input
                 type="text"
                 name="lastName"
