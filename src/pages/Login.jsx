@@ -136,7 +136,7 @@ export default function Login() {
       <div className="absolute inset-0"></div>
       <div className="card w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Mercado Campesino</h1>
+          <h1 className="text-3xl font-bold text-green-800 mb-2">Mercado Campesino</h1>
           <p className="text-black">Inicia sesión en tu cuenta</p>
         </div>
 
