@@ -174,9 +174,15 @@ export default function ProductBrowser() {
                 )}
               </div>
 
-              {/* Nombre */}
-              <div className="p-4">
+              {/* Nombre y precio */}
+              <div className="p-4 pb-2">
                 <h6 className="text-slate-800 text-xl font-semibold">{product.name}</h6>
+                {product.price > 0 && (
+                  <p className="mt-1 text-lg font-bold text-green-800">
+                    ${product.price}
+                    <span className="text-sm font-normal text-slate-500"> / {product.quantity || 'unidad'}</span>
+                  </p>
+                )}
               </div>
 
               {/* Botón de pedido por WhatsApp (al fondo de la tarjeta) */}

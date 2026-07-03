@@ -46,6 +46,20 @@ export const useProductStore = create((set, get) => ({
     }
   },
 
+  updateProduct: async (id, updates) => {
+    try {
+      set({ loading: true, error: null })
+      const data = await productClient.updateProduct(id, updates)
+      set({ products: get().products.map(p => (p.id === id ? data : p)) })
+      return { success: true }
+    } catch (error) {
+      set({ error: error.message })
+      return { success: false, error: error.message }
+    } finally {
+      set({ loading: false })
+    }
+  },
+
   deleteProduct: async (id) => {
     try {
       set({ loading: true, error: null })

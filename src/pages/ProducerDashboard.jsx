@@ -5,10 +5,19 @@ import { useProductStore } from '@/stores/productStore'
 import { getProductImageUrl } from '@/utils/storage'
 import { userClient } from '@/lib/supabase' // ✅ Cambiado: userClient en vez de supabase
 
+// Unidades de medida disponibles para el precio
+const PRICE_UNITS = ['unidad', 'libra', 'kilo', 'arroba', 'docena', 'litro', 'bulto']
+
 export default function ProducerDashboard() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { products, fetchProducts, deleteProduct } = useProductStore()
+  const { products, fetchProducts, deleteProduct, updateProduct } = useProductStore()
+
+  // Producto en edición y datos del formulario de edición
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [editData, setEditData] = useState({ name: '', price: '', unit: 'unidad' })
+  const [editError, setEditError] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
 
   const [producerProfile, setProducerProfile] = useState(null)
   const [profileLoaded, setProfileLoaded] = useState(false)
@@ -112,6 +121,48 @@ export default function ProducerDashboard() {
     navigate('/create-product')
   }
 
+  // Abre el modal de edición con los datos del producto
+  const openEditProduct = (product) => {
+    setEditError('')
+    setEditData({
+      name: product.name ?? '',
+      price: product.price ?? '',
+      unit: product.quantity || 'unidad', // la unidad se guarda en la columna quantity
+    })
+    setEditingProduct(product)
+  }
+
+  // Guarda los cambios del producto (nombre, precio y unidad)
+  const handleSaveProduct = async (e) => {
+    e.preventDefault()
+    setEditError('')
+
+    const cleanName = editData.name.trim()
+    if (cleanName.length < 3) {
+      setEditError('El nombre debe tener al menos 3 caracteres')
+      return
+    }
+    const numericPrice = parseFloat(editData.price)
+    if (editData.price === '' || isNaN(numericPrice) || numericPrice < 0) {
+      setEditError('Ingresa un precio válido (0 o mayor)')
+      return
+    }
+
+    setEditSaving(true)
+    const result = await updateProduct(editingProduct.id, {
+      name: cleanName,
+      price: numericPrice,
+      quantity: editData.unit,
+    })
+    setEditSaving(false)
+
+    if (result.success) {
+      setEditingProduct(null)
+    } else {
+      setEditError(result.error || 'Error al guardar el producto')
+    }
+  }
+
   const userProducts = products.filter(p => p.producer_id === user?.id)
 
   const fullName = isProfileComplete
@@ -173,13 +224,74 @@ export default function ProducerDashboard() {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-8">
+        {/* Modal de edición de producto */}
+        {editingProduct && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h2 className="text-2xl font-bold mb-4">Editar producto</h2>
+
+              {editError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                  {editError}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProduct} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nombre del producto</label>
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Nombre"
+                    className="input-base"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Precio y unidad</label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={editData.price}
+                      onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
+                      placeholder="Ej: 5000"
+                      className="input-base w-full sm:flex-1"
+                    />
+                    <select
+                      value={editData.unit}
+                      onChange={(e) => setEditData(prev => ({ ...prev, unit: e.target.value }))}
+                      className="input-base w-full sm:w-44"
+                    >
+                      {PRICE_UNITS.map(u => (
+                        <option key={u} value={u}>por {u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button type="submit" className="btn-primary flex-1" disabled={editSaving}>
+                    {editSaving ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                  <button type="button" className="btn-ghost flex-1" onClick={() => setEditingProduct(null)}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center mb-8 bg-white bg-opacity-10 p-4 rounded-lg shadow">
           <div>
             <h1 className="text-3xl font-bold">Panel del Productor</h1>
-            <p className="text-black">Bienvenido, {fullName}</p>
+            <p className="text-black font-bold">Bienvenido, {fullName}</p>
 
             {producerProfile?.phone && (
-              <p className="text-xs text-black mt-1">
+              <p className="text-black font-bol mt-1">
                  WhatsApp: {producerProfile.phone}
               </p>
             )}
@@ -187,7 +299,7 @@ export default function ProducerDashboard() {
             {producerProfile && (
               <button
                 onClick={() => setShowProfileForm(true)}
-                className="text-sm text-black hover:underline mt-2 block"
+                className="text-black font-bol hover:underline mt-2 block"
               >
                Editar perfil
               </button>
@@ -218,14 +330,24 @@ export default function ProducerDashboard() {
                   />
                 )}
                 <h3 className="font-bold text-lg">{product.name}</h3>
-                <p className="text-sm text-gray-600">{product.description}</p>
-                <p className="font-bold mt-2">${product.price}</p>
-                <button
-                  onClick={() => deleteProduct(product.id)}
-                  className="btn-ghost w-full mt-3"
-                >
-                  Eliminar
-                </button>
+                <p className="font-bold mt-2 text-green-800">
+                  ${product.price}
+                  <span className="text-sm font-normal text-gray-500"> / {product.quantity || 'unidad'}</span>
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => openEditProduct(product)}
+                    className="btn-primary flex-1"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => deleteProduct(product.id)}
+                    className="btn-ghost flex-1"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             ))
           )}
