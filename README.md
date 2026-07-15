@@ -1,4 +1,4 @@
-# 🌾 Mercado Campesino Digital
+# Mercado Campesino Digital
 
 Plataforma digital de comercio electrónico que conecta productores agrícolas locales con consumidores conscientes. Un marketplace especializado en productos frescos, orgánicos y de calidad directamente del productor.
 
@@ -9,20 +9,20 @@ Plataforma digital de comercio electrónico que conecta productores agrícolas l
 
 ---
 
-## ✨ Características Principales
+##  Características Principales
 
-- 🛒 **Catálogo de Productos**: Listado completo de productos agrícolas con filtros y búsqueda
-- 👨‍🌾 **Perfiles de Productores**: Información detallada de productores con ratings y contacto
-- 🔐 **Autenticación Segura**: Sistema de login con rol de usuario (Admin, Productor, Consumidor)
-- 📱 **Integración WhatsApp**: Órdenes y comunicación directa vía WhatsApp
-- 💳 **Gestión de Órdenes**: Historial de compras y seguimiento de pedidos
-- 📸 **Carga de Imágenes**: Sistema seguro de almacenamiento de imágenes de productos
-- 🔍 **Búsqueda y Filtros**: Filtrado por categoría, precio y disponibilidad
-- 📊 **Dashboard Admin**: Panel de administración para gestión de usuarios y productos
-- 🌐 **Progressive Web App**: Funciona offline como aplicación nativa
-- 🎨 **Diseño Responsivo**: Optimizado para móvil, tablet y desktop
+-  **Catálogo de Productos**: Listado completo de productos agrícolas con filtros y búsqueda
+-  **Perfiles de Productores**: Información detallada de productores con ratings y contacto
+-  **Autenticación Segura**: Sistema de login con rol de usuario (Admin, Productor, Consumidor)
+-  **Integración WhatsApp**: Órdenes y comunicación directa vía WhatsApp
+-  **Gestión de Órdenes**: Historial de compras y seguimiento de pedidos
+-  **Carga de Imágenes**: Sistema seguro de almacenamiento de imágenes de productos
+-  **Búsqueda y Filtros**: Filtrado por categoría, precio y disponibilidad
+-  **Dashboard Admin**: Panel de administración para gestión de usuarios y productos
+-  **Progressive Web App**: Funciona offline como aplicación nativa
+-  **Diseño Responsivo**: Optimizado para móvil, tablet y desktop
 
-## 🎯 Características por Rol
+##  Características por Rol
 
 ### Para Productores
 - Registro y validación de cuenta
@@ -46,7 +46,7 @@ Plataforma digital de comercio electrónico que conecta productores agrícolas l
 
 ---
 
-## 🛠️ Stack Tecnológico
+##  Stack Tecnológico
 
 ### Frontend
 - **React 18.2.0** - Librería de UI
@@ -70,7 +70,7 @@ Plataforma digital de comercio electrónico que conecta productores agrícolas l
 
 ---
 
-## 📋 Requisitos Previos
+##  Requisitos Previos
 
 - **Node.js** v18 o superior
 - **npm** o **yarn**
@@ -79,7 +79,7 @@ Plataforma digital de comercio electrónico que conecta productores agrícolas l
 
 ---
 
-## 🚀 Instalación & Configuración
+##  Instalación & Configuración
 
 ### 1. Clonar el Repositorio
 
@@ -133,7 +133,7 @@ La aplicación estará disponible en `http://localhost:5173`
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 mercado-campesino-app/
@@ -182,7 +182,7 @@ mercado-campesino-app/
 
 ---
 
-## 🗄️ Estructura de Base de Datos
+## Estructura de Base de Datos
 
 ### Tabla: `users`
 ```sql
@@ -256,7 +256,7 @@ CREATE TABLE producer_profiles (
 
 ---
 
-## 📝 Scripts Disponibles
+## Scripts Disponibles
 
 ```bash
 # Desarrollo
@@ -276,7 +276,7 @@ supabase migration up    # Aplicar migraciones
 
 ---
 
-## 🚀 Deploy
+## Deploy
 
 ### Vercel (Recomendado)
 
@@ -294,9 +294,9 @@ netlify deploy --prod --dir=dist
 
 ---
 
-## 🔐 Seguridad & Auditoría
+## Seguridad & Auditoría
 
-⚠️ **Estado Actual**: La aplicación se encuentra en fase de auditoría técnica. Se han identificado vulnerabilidades que deben ser arregladas antes de ir a producción.
+**Estado Actual**: La aplicación se encuentra en fase de auditoría técnica. Se han identificado vulnerabilidades que deben ser arregladas antes de ir a producción.
 
 ### Documentos de Auditoría Disponibles
 - `AUDITORIA_TECNICA_COMPLETA.md` - Análisis técnico exhaustivo
@@ -309,7 +309,7 @@ netlify deploy --prod --dir=dist
 
 ---
 
-## 🔗 Servicios Principales
+## Servicios Principales
 
 ### AuthService
 Autenticación y gestión de sesiones
@@ -342,7 +342,7 @@ await uploadService.deleteImage(path)
 
 ---
 
-## 🌐 Integración WhatsApp
+## Integración WhatsApp
 
 La plataforma integra WhatsApp para comunicación directa:
 
@@ -352,7 +352,7 @@ const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(mes
 
 ---
 
-## 📱 PWA (Progressive Web App)
+## PWA (Progressive Web App)
 
 La aplicación funciona como PWA:
 - Instalable en dispositivos
@@ -362,7 +362,7 @@ La aplicación funciona como PWA:
 
 ---
 
-## 🤝 Contribución
+## Contribución
 
 Las contribuciones son bienvenidas. Por favor:
 
@@ -374,14 +374,14 @@ Las contribuciones son bienvenidas. Por favor:
 
 ---
 
-## 📞 Contacto & Soporte
+## Contacto & Soporte
 
 - **Email**: info@mercadocampesino.com
 - **GitHub Issues**: [Issues](https://github.com/cpuro/mercado-campesino-app/issues)
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la licencia MIT. Ver LICENSE para más detalles.
 
@@ -389,4 +389,4 @@ Este proyecto está bajo la licencia MIT. Ver LICENSE para más detalles.
 
 **Última actualización:** Junio 2026  
 **Versión:** 1.0.0-beta  
-**Hecho con ❤️ para conectar productores rurales con consumidores urbanos**
+**Hecho para conectar productores rurales con consumidores urbanos**
