@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
           {/* Copyright o información adicional */}
           <div className="flex flex-col md:flex-row justify-between items-center text-base md:text-lg space-y-4 md:space-y-0">
-            <p>&copy; 2026 Mercado Campesino Digital.</p>
+            <p>&copy; 2026 Mercado Campesino Digital. Desarrollado por Ing. Cristhian Andres Puello Rojas.</p>
             <div className="flex gap-6">
               <a href="/documents/aviso-de-privacidad-paso-a-paso.pdf" className="hover:text-white transition" target="_blank" rel="noopener noreferrer">Privacidad</a>
               <a href="/documents/politica-tratamiento-de-datos-paso-a-paso.pdf" className="hover:text-white transition" target="_blank" rel="noopener noreferrer">Términos</a>
